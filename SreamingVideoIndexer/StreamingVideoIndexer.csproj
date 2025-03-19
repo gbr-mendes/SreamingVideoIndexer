@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-SreamingVideoIndexer-fdaab609-d21b-410c-8129-93d8914ac8bc</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StreamingVideoIndexer.Core\StreamingVideoIndexer.Core.csproj" />
+    <ProjectReference Include="..\StreamingVideoIndexer.Shared\StreamingVideoIndexer.Shared.csproj" />
+  </ItemGroup>
+</Project>
