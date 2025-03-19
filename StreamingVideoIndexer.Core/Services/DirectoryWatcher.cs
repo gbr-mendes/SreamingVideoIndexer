@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Optional;
-using Optional.Collections;
-using Optional.Unsafe;
 using StreamingVideoIndexer.Core.Interfaces.Services;
 using StreamingVideoIndexer.Core.Settings;
 using StreamingVideoIndexer.Core.ValueObjects;

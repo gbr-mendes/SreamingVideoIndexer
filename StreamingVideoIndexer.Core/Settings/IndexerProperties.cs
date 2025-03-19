@@ -2,6 +2,6 @@
 
 public class IndexerProperties
 {
-    public string SearchDirectory { get; set; }
-    public string IndexedVideosDirectory { get; set; }
+    public required string SearchDirectory { get; set; }
+    public required string IndexedVideosDirectory { get; set; }
 }
