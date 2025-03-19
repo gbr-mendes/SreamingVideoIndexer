@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-SreamingVideoIndexer-fdaab609-d21b-410c-8129-93d8914ac8bc</UserSecretsId>
+    <UserSecretsId>dotnet-StreamingVideoIndexer-fdaab609-d21b-410c-8129-93d8914ac8bc</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

@@ -9,7 +9,7 @@ using StreamingVideoIndexer.Infra.Repositories;
 using StreamingVideoIndexer.Shared.Interfaces;
 using StreamingVideoIndexer.Shared.Services;
 
-namespace SreamingVideoIndexer;
+namespace StreamingVideoIndexer;
 
 public class Program
 {
