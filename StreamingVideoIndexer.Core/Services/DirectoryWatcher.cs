@@ -25,14 +25,14 @@ public class DirectoryWatcher : IDirectoryWatcher
         ConfigureWatcher();
     }
 
-    public void OnCreated(object sender, FileSystemEventArgs e)
+    public async void OnCreated(object sender, FileSystemEventArgs e)
     {
         var attributes = File.GetAttributes(e.FullPath);
         var isDirectory = attributes.HasFlag(FileAttributes.Directory);
 
         try
         {
-            var fileProperties = _handleFileService.GetFileProperties(e.FullPath, isDirectory);
+            var fileProperties = await _handleFileService.GetFileProperties(e.FullPath, isDirectory);
             _filesToIndex?.Enqueue(fileProperties);
         }
         catch(Exception ex)

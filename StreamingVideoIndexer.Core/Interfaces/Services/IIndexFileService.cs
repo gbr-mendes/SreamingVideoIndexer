@@ -4,5 +4,5 @@ namespace StreamingVideoIndexer.Core.Interfaces.Services;
 
 public interface IIndexFileService
 {
-    void IndexFile(FileProperties fileProperties, bool reindex = false);
+    Task IndexFile(FileProperties fileProperties, bool reindex = false);
 }

@@ -42,14 +42,14 @@ public class Worker : BackgroundService
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 while (_filesToIndex.TryDequeue(out var file))
                 {
-                    _indexFileService.IndexFile(file);
+                    await _indexFileService.IndexFile(file);
                 }
             }
             await Task.Delay(1000, stoppingToken);
         }
     }
 
-    protected void ProcessEntriesOnStart()
+    protected async void ProcessEntriesOnStart()
     {
         var entries = Directory.GetFileSystemEntries(_indexerProperties.SearchDirectory);
         foreach (var path in entries)
@@ -63,8 +63,8 @@ public class Worker : BackgroundService
 
             try
             {
-                var fileProperties = _handleFileService.GetFileProperties(path, isDirectory);
-                _indexFileService.IndexFile(fileProperties);
+                var fileProperties = await _handleFileService.GetFileProperties(path, isDirectory);
+                await _indexFileService.IndexFile(fileProperties);
             }
             catch(CannotIndexFileException ex)
             {

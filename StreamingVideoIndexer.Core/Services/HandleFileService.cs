@@ -5,6 +5,7 @@ using StreamingVideoIndexer.Core.Interfaces.Services;
 using StreamingVideoIndexer.Core.ValueObjects;
 using Optional.Unsafe;
 using StreamingVideoIndexer.Core.Exceptions;
+using MediaInfo.DotNetWrapper.Enumerations;
 
 namespace StreamingVideoIndexer.Core.Services;
 
@@ -16,34 +17,46 @@ public class HandleFileService : IHandleFileService
         _logger = logger;
     }
 
-    public FileProperties GetFileProperties(string path, bool isDirectory = false)
+    public async Task<FileProperties> GetFileProperties(string path, bool isDirectory = false)
     {
         FileProperties fileProperties;
         FileInfo fileInfo;
+        TimeSpan duration;
+        string fileName;
 
         if (!isDirectory)
         {
+            duration = GetVideoDuration(path);
             var fileAttributes = File.GetAttributes(path);
             fileInfo = new FileInfo(path);
-            fileProperties = new FileProperties(path: path, size: fileInfo.Length, thumbnailPath: Option.None<string>());
+            fileName = Path.GetFileNameWithoutExtension(path);
+            fileProperties = new FileProperties(name: fileName, path: path, size: fileInfo.Length, thumbnailPath: Option.None<string>(), duration: duration);
             return fileProperties;
         }
-        // move to config file and make sure the true extesion is specified (magic number)
+        // TODO: move to config file and make sure the true extesion is specified (magic number)
         string[] videoExtensionPatterns = ["*.mp4"];
 
         var videoFile = videoExtensionPatterns.SelectMany(pattern => Directory.GetFiles(path, pattern))
             .FirstOrNone();
 
+
         if (!videoFile.HasValue)
         {
             throw new CannotIndexFileException($"The directory {path} does not contains a file that can be reproduced, so, it will not be indexed yet.");
         }
+        
+        var descriptionFile = Directory.GetFiles(path, "*.desc.*").FirstOrNone();
+
+        var description = descriptionFile.HasValue ? await ReadTextFileAsync(descriptionFile.ValueOrFailure()) : null;
 
         fileInfo = new FileInfo(videoFile.ValueOrFailure());
 
         var thumbnail = Directory.GetFiles(path, "*.thumb.*").FirstOrNone();
+        duration = GetVideoDuration(videoFile.ValueOrFailure());
+       
+        fileName = Path.GetFileNameWithoutExtension(path);
 
-        return new FileProperties(videoFile.ValueOrFailure(), fileInfo.Length, thumbnail);
+        return new FileProperties(fileName, videoFile.ValueOrFailure(), fileInfo.Length, thumbnail, duration, description);
     }
 
     public bool CreateSymbolicLink(string sourceFilePath, string destinationFilePath)
@@ -59,5 +72,24 @@ public class HandleFileService : IHandleFileService
             _logger.LogError("Could not create symbolic link {}. Error: {}", destinationFilePath, ex);
             return false;
         }
+    }
+
+    public static TimeSpan GetVideoDuration(string path)
+    {
+        var mediaInfo = new MediaInfo.DotNetWrapper.MediaInfo();
+        mediaInfo.Open(path);
+        var durationMilisseconds = long.Parse(mediaInfo.Get(StreamKind.Video, 0, "Duration"));
+        return TimeSpan.FromMilliseconds(durationMilisseconds);
+    }
+
+    public static async Task<string> ReadTextFileAsync(string path)
+    {
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException($"File {path} not found.");
+        }
+
+        using var reader = new StreamReader(path);
+        return await reader.ReadToEndAsync();
     }
 }

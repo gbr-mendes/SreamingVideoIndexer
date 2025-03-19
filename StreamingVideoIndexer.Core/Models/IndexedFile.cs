@@ -8,6 +8,6 @@ public class IndexedFile
     public string? Description { get; set; }
     public string? ThumbnailPath { get; set; }
     public long Size { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public TimeSpan Duration { get; set; }
 }
