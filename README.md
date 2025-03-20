@@ -1,6 +1,6 @@
 # StreamingVideoIndexer
 
-Microsserviço em dotnet que monitora entradas em um diretorio especificado na config e as indexa, adicionando as propriedades do arquivo no banco de dados.
+Microsserviço em dotnet que monitora entradas em um diretorio especificado na config e as indexa, adicionando as propriedades do arquivo no banco de dados e fazendo o upload de uma thumbnail (caso exista) para um bucket.
 O controle de indexação é feito através de links simbólicos para evitar redundância
 A monitoração do diretório é feita usando a classe FileSystemWatcher
 
