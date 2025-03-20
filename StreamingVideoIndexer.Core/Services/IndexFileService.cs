@@ -17,19 +17,22 @@ public class IndexFileService : IIndexFileService
     private readonly ILogger<IndexFileService> _logger;
     private readonly IHandleFileService _handleFileService;
     private readonly IIndexFilesRepository _indexFilesRepository;
+    private readonly IS3StorageService _s3StorageService;
 
     public IndexFileService(
         IHasherService hasherService,
         IOptions<IndexerProperties> indexerProperties,
         ILogger<IndexFileService> logger,
         IHandleFileService handleFileService,
-        IIndexFilesRepository indexFilesRepository)
+        IIndexFilesRepository indexFilesRepository,
+        IS3StorageService s3StorageService)
     {
         _hasherService = hasherService;
         _indexerProperties = indexerProperties.Value;
         _logger = logger;
         _handleFileService = handleFileService;
         _indexFilesRepository = indexFilesRepository;
+        _s3StorageService = s3StorageService;
     }
 
     public async Task IndexFile(FileProperties fileProperties, bool reindex = false)
@@ -48,6 +51,12 @@ public class IndexFileService : IIndexFileService
 
         _handleFileService.CreateSymbolicLink(fileProperties.Path, symbolicLinkPath);
 
+        if (!WasFileIndexed(symbolicLinkPath))
+        {
+            _logger.LogError("Error creating symbolic link for file {filePath}.", fileProperties.Path);
+            return;
+        }
+
         var indexedFile = new IndexedFile
         {
             Name = fileProperties.Name,
@@ -58,7 +67,20 @@ public class IndexFileService : IIndexFileService
             Description = fileProperties.Description
         };
         
+        if (fileProperties.ThumbnailPath.HasValue)
+        {
+            var thumbnailPath = fileProperties.ThumbnailPath.ValueOrFailure();
+            var thumHash = _hasherService.CalculateMd5(thumbnailPath);
+            var thumbExtension = Path.GetExtension(thumbnailPath);
+            var remoteKey = $"{thumHash}{thumbExtension}";
+            
+            await UploadThumbnail(thumbnailPath, remoteKey);
+
+            indexedFile.ThumbnailRemoteKey = remoteKey;
+        }
+
         await _indexFilesRepository.AddIndexedFileAsync(indexedFile);
+        
 
         _logger.LogInformation("File {filePath} successfuly indexed.", fileProperties.Path);
         if (fileProperties.ThumbnailPath.HasValue)
@@ -67,6 +89,16 @@ public class IndexFileService : IIndexFileService
         }
 
         // TODO: add try catch and rollbacK ater creating a symbolic lin in case of an erro adding on database
+    }
+
+    private async Task UploadThumbnail(string thumbnailPath, string remoteKey)
+    {
+        var wasThumbnailUploaded = await _s3StorageService.UploadFileAsync(remoteKey, thumbnailPath);
+        if (!wasThumbnailUploaded)
+        {
+            _logger.LogError("Unexpected error uploading thumbnail {thumbnailPath} to S3.", thumbnailPath);
+        }
+        _logger.LogInformation("Thumbnail {thumbnailPath} uploaded to S3.", thumbnailPath);
     }
 
     private static bool WasFileIndexed(string filePath)
